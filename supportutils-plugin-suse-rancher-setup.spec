@@ -25,6 +25,9 @@ Group:          System/Monitoring
 Url:            https://github.com/SUSE-Enceladus/supportutils-plugin-suse-rancher-setup
 Source0:        %{name}-%{version}.tar.bz2
 Requires:       supportutils
+%ifarch %ix86 x86_64
+Requires:       dmidecode
+%endif
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
 BuildArch:      noarch
 
