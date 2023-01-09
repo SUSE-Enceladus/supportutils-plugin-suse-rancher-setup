@@ -1,0 +1,97 @@
+#!/bin/bash
+
+# Supportconfig Plugin for SUSE Rancher Setup
+#
+# Copyright (c) 2022 SUSE LLC
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor,
+# Boston, MA  02110-1301, USA.
+
+# Gathers logs from a running instance of SUSE Rancher Setup
+
+set +o noglob
+
+SVER="1.0"
+RCFILE="/usr/lib/supportconfig/resources/scplugin.rc"
+
+# Collect all the public cloud relevant data in a directory
+# $LOG is exported by supportconfig script and is the data collection
+# directory
+DATA_LOCATION="${LOG}/rancher_setup"
+mkdir -p $DATA_LOCATION
+
+if [ -s $RCFILE ]; then
+    if ! source "$RCFILE"; then
+        echo "ERROR: Initializing resource file: $RCFILE" >&2
+        exit 1
+    fi
+fi
+
+function framework() {
+    if dmidecode | grep -q amazon; then
+        FRAMEWORK="EC2"
+    fi
+    if dmidecode | grep -q Google; then
+        FRAMEWORK="GCE"
+    fi
+    if dmidecode | grep -q Microsoft; then
+        FRAMEWORK="Azure"
+    fi
+}
+
+function packages() {
+    # Note order dependent, the framework function must be called first
+    local INFO_FILE="$DATA_LOCATION/packages.txt"
+    local COMMON_PACKAGE_LIST="/usr/lib/supportconfig/resources/rpmlist_suse-rancher-setup_common"
+    local FRAMEWORK_PACKAGE_LIST="/usr/lib/supportconfig/resources/rpmlist_suse-rancher-setup_$FRAMEWORK"
+    echo "#==[ Packages ]=================================#" > $INFO_FILE
+
+    if [ -e $COMMON_PACKAGE_LIST ]; then
+        COMMON_PACKAGES=$(cat $COMMON_PACKAGE_LIST)
+    else
+        echo "$COMMON_PACKAGE_LIST not found" > $INFO_FILE
+        echo "Possible install problem of supportutils-plugin-suse-rancher-setup" > $INFO_FILE
+    fi
+
+    if [ -e $FRAMEWORK_PACKAGE_LIST ]; then
+        FRAMEWORK_PACKAGES=$(cat $FRAMEWORK_PACKAGE_LIST)
+    else
+        echo "$FRAMEWORK_PACKAGE_LIST not found" > $INFO_FILE
+        echo "Possible install problem of supportutils-plugin-suse-rancher-setup" > $INFO_FILE
+    fi
+
+    PACKAGE_QUERY=($COMMON_PACKAGES $FRAMEWORK_PACKAGES)
+
+    for pack in ${PACKAGE_QUERY[@]};do
+        echo "# rpm -qa $pack" >> $INFO_FILE
+        rpm -qa $pack >> $INFO_FILE
+    done
+}
+
+function config() {
+  local CONFIG_FILE="/usr/share/suse-rancher-setup/config/config.yml"
+  cp $CONFIG_FILE $DATA_LOCATION
+}
+
+function logs() {
+  local LOG_PATH="/var/lib/suse-rancher-setup/log"
+  for f in "$LOG_PATH/*"; do
+    cp $f $DATA_LOCATION
+  done
+}
+
+packages
+config
+logs
