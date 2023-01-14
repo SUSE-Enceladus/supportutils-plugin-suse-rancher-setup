@@ -20,7 +20,7 @@ install:
 	install -d -m 755 $(DESTDIR)/$(MANPATH)/man8
 	install -d -m 755 $(DESTDIR)/$(PLUGINPATH)
 	install -d -m 755 $(DESTDIR)/$(RESOURCEPATH)
-	install -m 644 man/man8/suse-public-cloud.8 $(DESTDIR)/$(MANPATH)/man8
+	install -m 644 man/man8/suse_rancher_setup.8 $(DESTDIR)/$(MANPATH)/man8
 	install supportconfig/plugins/* $(DESTDIR)/$(PLUGINPATH)
 	install -m 644 supportconfig/resources/* $(DESTDIR)/$(RESOURCEPATH)
-	gzip $(DESTDIR)/$(MANPATH)/man8/suse-public-cloud.8
+	gzip $(DESTDIR)/$(MANPATH)/man8/suse_rancher_setup.8

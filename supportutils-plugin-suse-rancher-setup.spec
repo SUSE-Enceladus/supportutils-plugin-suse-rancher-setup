@@ -17,7 +17,7 @@
 #
 
 Name:           supportutils-plugin-suse-rancher-setup
-Version:        0.1.0
+Version:        0.1.1
 Release:        0
 Summary:        SUSE Rancher Setup plugin for supportconfig
 License:        GPL-2.0+
